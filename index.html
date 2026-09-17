@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3eefc">
+<title>Claude House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Studio intro. Removed by app.js after ~2s. -->
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-mark">BIRD</div>
+    <p class="splash-line">Made by Bird Productions</p>
+  </div>
+</div>
+
+<!-- role=alert already announces changes; #app must NOT be a live region,
+     or every re-render would read the whole page to a screen reader. -->
+<div id="banner" class="banner" role="alert" hidden></div>
+
+<main id="app" class="app"></main>
+
+<script type="module" src="app.js"></script>
+
+<!--
+  Self-check. A plain (non-module) script, so it runs even when app.js
+  fails to load at all. If the splash is still up after 6 seconds, the
+  module never ran, and this prints why on the page. Useful when the
+  browser console is unavailable.
+-->
+<script>
+(function () {
+  var problems = [];
+  window.addEventListener('error', function (e) {
+    problems.push(e.message || ('Failed to load ' + (e.target && e.target.src || 'a file')));
+  }, true);
+  window.addEventListener('unhandledrejection', function (e) {
+    problems.push('Promise rejected: ' + (e.reason && e.reason.message || e.reason));
+  });
+
+  function esc(s) {
+    return String(s).replace(/[&<>]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c];
+    });
+  }
+
+  function line(label, ok, detail) {
+    return '<li style="margin:8px 0"><b>' + esc(label) + ':</b> ' +
+      (ok ? 'ok' : '<span style="color:#e05b6d">problem</span>') +
+      (detail ? '<br><small style="color:#6b6385">' + esc(detail) + '</small>' : '') +
+      '</li>';
+  }
+
+  function check(path) {
+    return fetch(path, { cache: 'no-store' })
+      .then(function (r) {
+        return r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status));
+      })
+      .then(function (text) { return { path: path, ok: true, text: text }; })
+      .catch(function (err) { return { path: path, ok: false, text: '', why: err.message }; });
+  }
+
+  setTimeout(function () {
+    var splash = document.getElementById('splash');
+    var appEl = document.getElementById('app');
+    if (!splash || appEl.innerHTML.trim() !== '') return; // app started fine
+
+    Promise.all([check('config.js'), check('app.js'), check('styles.css')])
+      .then(function (results) {
+        var config = results[0];
+        var appFile = results[1];
+        var css = results[2];
+        var rows = '';
+
+        rows += line('styles.css', css.ok, css.ok ? '' : css.why);
+        rows += line('config.js', config.ok, config.ok ? '' : config.why);
+        rows += line('app.js', appFile.ok, appFile.ok ? '' : appFile.why);
+
+        if (config.ok && appFile.ok) {
+          // The most common failure: the name config.js exports does not
+          // match the name app.js imports, so the module never executes.
+          var exported = (config.text.match(/export\s+const\s+(\w+)/g) || [])
+            .map(function (m) { return m.replace(/export\s+const\s+/, ''); });
+          var imported = (appFile.text.match(/import\s*\{([^}]+)\}\s*from\s*'\.\/config\.js'/) || [])[1];
+          imported = imported ? imported.split(',').map(function (s) { return s.trim(); }) : [];
+
+          var missing = imported.filter(function (name) { return exported.indexOf(name) === -1; });
+          rows += line(
+            'names match',
+            missing.length === 0,
+            missing.length
+              ? 'app.js imports ' + missing.join(', ') + ' but config.js exports ' + (exported.join(', ') || 'nothing')
+              : 'config.js exports: ' + exported.join(', ')
+          );
+
+          var placeholder = /YOUR-PROJECT-REF|YOUR-PUBLISHABLE-KEY|YOUR-ANON/.test(config.text);
+          rows += line('config filled in', !placeholder,
+            placeholder ? 'config.js still has placeholder text in it' : '');
+        }
+
+        if (problems.length) {
+          rows += line('errors', false, problems.join(' | '));
+        }
+
+        splash.remove();
+        appEl.innerHTML =
+          '<div class="card" style="margin-top:6vh">' +
+          '<h1 style="font-size:22px;margin-bottom:6px">App did not start</h1>' +
+          '<p style="color:#6b6385;font-size:14px;margin-bottom:14px">Self-check results:</p>' +
+          '<ul style="padding-left:18px;font-size:15px">' + rows + '</ul>' +
+          '</div>';
+      });
+  }, 6000);
+})();
+</script>
+
+</body>
+</html>
