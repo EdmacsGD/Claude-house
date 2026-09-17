@@ -1,9 +1,9 @@
-// Fill these in from your Supabase dashboard:
-// Project Settings > API > Project URL and anon/public key.
+// Supabase connection details for Claude House.
 //
-// The anon key is designed to be public. It is safe in this file ONLY
-// because row level security is on for every table (see schema.sql).
-// Never paste the service_role key here.
+// This key is meant to be public. It is safe in a file anyone can read
+// ONLY because row level security is on for every table (see schema.sql).
+// Never put a sb_secret_... or service_role key here. Those bypass RLS
+// and would give anyone who opens devtools full access to your database.
 
-export const SUPABASE_URL = 'sb_publishable_RFSBXanaI72rg2BH0AEbZw_uCi5sK4T';
-export const SUPABASE_ANON_KEY = 'https://ewfiupvsjxmwafpllmju.supabase.co'';
+export const SUPABASE_URL = 'https://ewfiupvsjxmwafpllmju.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_RFSBXanaI72rg2BH0AEbZw_uCi5sK4T';
