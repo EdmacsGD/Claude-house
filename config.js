@@ -5,5 +5,5 @@
 // because row level security is on for every table (see schema.sql).
 // Never paste the service_role key here.
 
-export const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
-export const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+export const SUPABASE_URL = 'sb_publishable_RFSBXanaI72rg2BH0AEbZw_uCi5sK4T';
+export const SUPABASE_ANON_KEY = 'https://ewfiupvsjxmwafpllmju.supabase.co'';
